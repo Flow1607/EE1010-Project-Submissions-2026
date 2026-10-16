@@ -1,0 +1,40 @@
+PT100 Industrial Thermometer - References used
+
+
+- PT100 Research Paper and GitHub Repository
+	(https://github.com/gadepall/pt100)
+	- Understanding the PT100 RTD working principle and Callendar-Van Dusen equation
+	- Circuit planning and schematic for the voltage divider analog front-end
+	- Pinout mapping for the 16x2 JHD 162A parallel LCD display
+	- Reference C++ code for reading ADC values, voltage calculation, and LCD interfacing
+	- Reference for polynomial Least Squares (LSQ) regression formulation
+
+
+- Python and NumPy Documentation
+	(https://numpy.org/doc/)
+	- Utilizing numpy.polyfit for quadratic Least Squares curve fitting
+	- Data handling and structuring voltage vs. temperature calibration datasets
+	- Plotting and visualizing curve fits across experimental runs using Matplotlib
+
+
+- LLMs, mainly Gemini
+	- Circuit Planning: Planning the breadboard prototyping workflow before committing to a perfboard
+	- Perfboard Organization: Strategizing layout constraints, placing the LCD along the board length, and establishing dedicated +5V and GND solder-bridged power rails
+	- Research on Components: Understanding the PT100 resistance-temperature characteristics, the internal 10-bit Arduino ADC, and the HD44780 parallel LCD controller
+	- Mathematical Modeling: Formulating quadratic polynomial regression to map sampled voltage to temperature
+	- Troubleshooting Hardware & Breadboard: Diagnosing unresponsive LCD issues (solid black blocks), tracing data strobe lines, and pinpointing a defective Arduino Uno with damaged I/O pins
+	- Troubleshooting Perfboard & Soldering: Identifying cold solder joints on control lines (Pin 4 RS and Pin 6 E) using multimeter continuity tests, fixing cracked data traces, and stabilizing the contrast potentiometer
+	- Calibration Analysis: Reviewing calibration data drift from the first run and refining the model with a second heating-and-cooling dataset
+
+
+- Surfing on the Web (Googling)
+	- JHD 162A / HD44780 16-pin LCD pinouts and 4-bit parallel interfacing details
+	- IEC 60751 standard Callendar-Van Dusen coefficients for platinum RTDs
+	- Techniques for desoldering, bridging rails, and cleaning perfboard pads
+	- Obtaining reference schematics and component graphics for the report
+
+
+- Assistance from the TAs & Course Instructors
+	- Laboratory Equipment: Access to soldering stations, electric kettle/water heating setup, reference pen thermometer, and breadboards
+	- Project Guidance: Clarifications regarding least squares calibration requirements and empirical data collection procedures
+	- Lab Verification: Inspecting the working perfboard assembly and checking temperature readout accuracy
