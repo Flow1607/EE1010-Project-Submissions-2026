@@ -1,0 +1,411 @@
+\let\negmedspace\undefined
+\let\negthickspace\undefined
+\documentclass[journal,12pt,onecolumn]{IEEEtran}
+\usepackage{graphicx} 
+\usepackage{cite}
+\usepackage{gvv-book}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{algorithmic}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{txfonts}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{gensymb}
+\usepackage{comment}
+\usepackage{ragged2e}
+\usepackage[breaklinks=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{calc}
+\usepackage{multirow}
+\usepackage{hhline}
+\usepackage{ifthen}
+\usepackage{lscape}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{gvv}
+\usepackage{etoolbox}
+\definecolor{grpRed}{rgb}{1.0, 0.8, 0.8}
+\definecolor{grpGreen}{rgb}{0.8, 1.0, 0.8}
+\definecolor{grpYellow}{rgb}{1.0, 1.0, 0.8}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\title{Unmanned Ground Vehicle (UGV) -- Part 1} \vspace{0.3cm}
+\author{IIT Hyderabad \\ \vspace{0.1cm}
+	Department of Electrical Engineering [ICDT] \\ 
+	\vspace{0.55cm}EE1010     \\ Maths For Electrical Engineering \\ \vspace{0.15cm} Prof. G.~V.~V. Sharma \\\vspace{0.8cm}
+	Jaideep Singh \hspace{4.3cm} Mudit Gupta \\ EE26BTECH11213 \hspace{2.8cm} EE26BTECH11216 \\\vspace{0.2cm} }
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	\section{Project Overview}
+	\noindent \textbf{Project Objective:} \\
+	To design, assemble, and implement a two-wheel differential drive Unmanned Ground Vehicle (\textbf{UGV}) featuring remote teleoperation via Bluetooth Classic provided by the ESP32 using the Dabble mobile interface, bidirectional DC motor actuation via an L293D quadruple half-H driver, hardware PWM speed modulation, and a decoupled DC-DC buck regulation stage.
+	
+	\noindent \textbf{Key Features:}
+	\begin{enumerate}
+		\item \textbf{Dual-Wheel Differential Drive:} Actuated by two $3\text{V--}6\text{V}$ DC TT gear motors ($1:48$ reduction ratio) driven by an L293D quadruple half-H driver IC.
+		\item \textbf{Bluetooth Remote Teleoperation:} Wireless control integrated with the Dabble mobile application (GamePad module) over Bluetooth Classic on the ESP32 platform.
+		\item \textbf{Hardware PWM Speed Regulation:} 8-bit resolution ($0\text{--}255$) at a $1\text{ kHz}$ switching frequency, featuring directional trim calibration to eliminate motor trajectory drift.
+		\item \textbf{Decoupled Power Architecture:} Unregulated $8.08\text{V}$ motor bus paired with an adjustable LM2596 switching regulator tuned to $5.18\text{V}$ logic supply, eliminating brownout resets during transient motor inrush surges.
+	\end{enumerate}
+
+	\section{Components}
+	\begin{itemize}
+		\item \textbf{ESP32-WROOM-32 Dev Module:} 1
+		\item \textbf{L293D Quadruple Half-H Driver IC:} 1
+		\item \textbf{DC TT Gear Motors ($3\text{V--}6\text{V}$, $1:48$ Gear Ratio):} 2
+		\item \textbf{UGV Chassis Kit (Drive Wheels, Caster Wheel, Acrylic Base Plates):} 1
+		\item \textbf{LM2596 DC-DC Buck Converter Module:} 1
+		\item \textbf{Rechargeable DC Battery Pack ($7.40\text{V--}8.40\text{V}$):} 1
+		\item \textbf{Solderless Breadboard:} 1
+		\item \textbf{Jumper Wires (Male-to-Male, Male-to-Female):} 25
+		\item \textbf{Micro-USB Programming Cable:} 1
+	\end{itemize}
+	\newpage
+
+    \section*{Table of Contents}
+
+\vspace{1cm}
+
+\begin{enumerate}
+	\setlength{\itemsep}{1.1em} 
+	
+	\item Project Overview \hfill 1 %[cite: 54]
+	\item Components \hfill 1 %[cite: 54]
+	\item A Finished Look at the UGV \hfill 3 %[cite: 55]
+	\item \textbf{Project Progress Log and Engineering Challenges} \hfill 5 %[cite: 57]
+	\begin{itemize}
+		\setlength{\itemsep}{0.8em} 
+		
+		\item \textbf{Phase 1}: Understanding and Planning the Circuit \hfill 5 %[cite: 57]
+		\item \textbf{Phase 2}: Constructing the Initial Circuit \hfill 5 %[cite: 57]
+		\item \textbf{Phase 3}: Transitioning to Standalone Battery Powered Circuit \hfill 6 %[cite: 58]
+		\item \textbf{Phase 4}: Supply Voltage Sag and Brownout Mitigation \hfill 8 %[cite: 60, 61]
+		\item \textbf{Phase 5}: Speed Calibration and D-Pad Expansion \hfill 11 %[cite: 63]
+	\end{itemize}
+	\item Hardware Interfacing and Pin Allocation \hfill 13 %[cite: 65]
+	\item Project Reflections and Learning Outcomes \hfill 14 %[cite: 66]
+	\item Teamwork and Acknowledgements \hfill 15 %[cite: 67]
+\end{enumerate}
+
+\vspace{1cm}
+
+\newpage
+
+    \section{\textbf{A Finished Look at the UGV}}
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.75\linewidth]{side-view.jpg}
+	\caption{Fully assembled two-wheel differential drive UGV with onboard ESP32, L293D driver, and power regulation module}
+	\label{fig:ugv_complete_view}
+\end{figure}
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.75\linewidth]{top-view.jpg}
+	\caption{Top-down layout showing motor driver routing, common ground distribution, and caster pivot alignment}
+	\label{fig:ugv_wiring_layout}
+\end{figure}
+
+\subsection*{System Operation and Teleoperation Architecture}
+The Unmanned Ground Vehicle (UGV) operates on a two-wheel differential drive mechanism steered by two $3\text{V--}6\text{V}$ DC TT gear motors ($1:48$ reduction ratio) paired with a free-wheeling front caster wheel. Wireless teleoperation is implemented over 2.4~GHz Bluetooth Classic, establishing an RF link between the ESP32 microcontroller and the Dabble mobile application.
+
+The firmware imports the \texttt{<DabbleESP32.h>} header library, utilizing the \textbf{GamePad} module configured in \textbf{Digital Mode}. Incoming control packets are parsed non-blockingly using \texttt{Dabble.processInput()} inside the primary super-loop, providing real-time responsive driving without processor stall states.
+
+\subsection*{Hardware PWM Throttling and Directional Control}
+Motor rotational speed is regulated using the ESP32's hardware LED PWM controller (\texttt{ledc}) operating at a switching frequency of $1\text{ kHz}$ with an $8\text{-bit}$ resolution ($0\text{--}255$ duty cycle range). These PWM signals are fed directly into the enable pins of the L293D quadruple half-H driver (Pin 1 for the Right motor and Pin 9 for the Left motor), while four dedicated GPIO lines dictate directional polarity across the internal H-bridge transistors.
+
+Directional vectors are governed by the digital keypad (Up for forward translation, Down for reverse, and Left/Right for zero-radius axial spinning). Dynamic throttling is governed by the four right-hand digital buttons:
+\begin{itemize}
+	\item \textbf{Cross ($\times$):} Returns the robot to the \textbf{Default} cruise speed of \textbf{180} ($\approx 70.6\%$ duty cycle).
+	\item \textbf{Square ($\square$):} Throttles down to \textbf{Slow} speed at \textbf{130} ($\approx 51.0\%$ duty cycle) for delicate navigation.
+	\item \textbf{Triangle ($\triangle$):} Accelerates to \textbf{Fast} speed at \textbf{230} ($\approx 90.2\%$ duty cycle).
+	\item \textbf{Circle ($\bigcirc$):} Engages \textbf{Maximum} speed at \textbf{255} ($100\%$ full continuous DC rail).
+\end{itemize}
+
+\section{\textbf{Project Progress Log and Engineering Challenges}}
+
+\subsection*{\textbf{Phase 1}: Understanding and Planning the Circuit}
+\begin{itemize}
+	\item \textbf{Objective:} Understand the mechanical and electrical architecture of the two-wheel differential drive UGV, interface the L293D dual H-bridge motor driver with the ESP32 microcontroller, and plan a dual-rail power distribution system to isolate digital logic from inductive motor noise.
+	
+	\item \textbf{Driver Interfacing and Logic Levels:} Studied the mechanical assembly and driver interfacing guidelines from the reference repository. The L293D quadruple half-H driver features two separate power inputs: $V_{CC1}$ for internal logic circuitry ($4.5\text{V--}7.0\text{V}$) and $V_{CC2}$ for the high-current motor stage ($4.5\text{V--}36.0\text{V}$). Although the ESP32 operates at $3.3\text{V}$ logic levels, the L293D has an input high voltage threshold ($V_{IH}$) of $2.3\text{V}$, allowing direct GPIO drive without requiring external logic level shifters.
+	
+	\item \textbf{Power Distribution and Ground Plane Strategy:} Preliminary analysis showed that DC gear motors draw significant inrush currents during startup and directional shifts. If shared across an unbuffered rail, these inductive spikes cause transient voltage drops that reset the microcontroller. To prevent interference, we planned two isolated power lines on the breadboard: an unregulated bus dedicated to the motor stage ($V_{CC2}$) and a regulated, low-noise bus for the ESP32 and logic stages ($V_{CC1}$). A single common ground bus tied all negative terminals together to maintain a uniform reference potential across the entire system.
+	
+	\item \textbf{Assembly and Testing Roadmap:} To isolate faults systematically, we avoided assembling a fully untethered build right away. We established a phased testing approach to verify code execution, Bluetooth packet reception, and basic motor switching over a tethered USB connection first, before migrating the hardware to a standalone battery pack:
+	\begin{center}
+		\textbf{Working through USB initially} $\;\boldsymbol{\longrightarrow}\;$ \textbf{Moving the circuit to independently work from the battery}
+	\end{center}
+\end{itemize}
+
+\subsection*{\textbf{Phase 2}: Constructing the Initial Circuit}
+\begin{itemize}
+	\item \textbf{Objective:} To verify the operational integrity of all allotted components, confirm proper signal switching across the L293D motor driver, and validate basic motor rotation on bench power prior to assembling an autonomous power system.
+	
+	\item \textbf{Initial Connections:} The hardware was assembled modularly on a solderless breadboard. Female-to-male jumper wires were routed from the ESP32 development board header pins down to the breadboard rows, while male-to-male jumpers established connections across the breadboard tie-points to the L293D driver IC. The two DC TT gear motors were connected to the driver output channels, and a common ground reference was established between the microcontroller ground and the driver ground pins. Broken solder on one of the motors was repaired and a fresh wire was attached. Voltage across both the cells was verified. The VIN pin of the ESP 32 used to give power for logic supply to the L293d, giving a voltage of 5.28V when connected to the laptop/mobile through the micro-usb.
+	
+	\item \textbf{Sketch and Verification:} Libraries in the Arduino IDE were downloaded to support the ESP32 Dev Module and Dabble utility. A basic diagnostic sketch was uploaded to the ESP32 over a tethered USB cable to validate pin responses. With the robot chassis elevated off the bench surface to prevent runaway movement, the test routine toggled the direction and enable pins to confirm that forward, reverse, and stop commands operated each motor correctly.
+
+    \item \textbf{Dabble Teleoperation and D-Pad Verification:} Following low-level verification, the firmware was linked to the Dabble library to test wireless teleoperation over Bluetooth Classic. The system was temporarily powered directly from a mobile device via USB to evaluate untethered control logic before integrating the battery pack. All directional inputs from the digital GamePad D-pad (Up, Down, Left, Right) triggered the expected drive states reliably. However, physical drive tests revealed slight discrepancies between the speeds of the two DC TT motors, causing the vehicle to gently veer rather than follow an ideal straight line.
+\end{itemize}
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.6\linewidth]{ugv_testing_initial.jpg}
+	\caption{Initial circuit assembly and functional verification powered via tethered USB cable}
+	\label{fig:ugv_usb_test}
+\end{figure}
+
+\subsection*{\textbf{Phase 3}: Transitioning to Standalone Battery Powered Circuit}
+\begin{itemize}
+	\item \textbf{Objective:} To achieve standalone, untethered operation by transitioning from continuous USB power to an onboard rechargeable DC battery supply, while establishing a safe and stable voltage level for the L293D logic and ESP32 microcontroller.
+\end{itemize}
+
+\subsubsection*{Challenge 2: Voltage Regulation for L293D Logic and Power Architecture Selection}
+\begin{itemize}
+	\item \textbf{Operating Voltage Constraints:} For safe and reliable operation, the L293D motor driver requires its logic supply pin ($V_{CC1}$, Pin 16) to remain strictly within the range of $4.5\text{V}$ to $7.0\text{V}$. Because the onboard battery pack delivers $\approx 8.08\text{V--}8.16\text{V}$, feeding raw battery power directly into the logic circuitry would exceed absolute maximum ratings and destroy the IC. A dedicated stepping and power distribution scheme had to be decided upon.
+	
+	\item \textbf{Decision Making and Planning:} We evaluated three possible approaches to power the logic stage safely:
+	\begin{enumerate}
+		\item \textbf{Method 1 (Linear Voltage Regulator):} Connect the battery pack to an LM7805 regulator to produce a steady $5\text{V}$ output. This $5\text{V}$ line can be supplied directly to the ESP32 via its \texttt{VIN} pin (which feeds its onboard $3.3\text{V}$ LDO) and routed to Pin 16 ($V_{CC1}$) of the L293D for logic bias.
+		\item \textbf{Method 2 (DC-DC Buck Converter):} Integrate an adjustable step-down buck converter (such as the LM2596) to tune and step down the voltage with high power efficiency.
+		\item \textbf{Method 3 (External Secondary Power Supply):} Use an isolated secondary source, such as a separate power bank or an auxiliary multi-cell battery holder, dedicated exclusively to powering the microcontroller.
+	\end{enumerate}
+	
+	\item \textbf{Design Selection:} To minimize chassis weight, conserve limited platform space, and maintain a clean, compact layout, Method 3 was discarded. Because an LM7805 linear regulator was readily available in the hostel, it was chosen as the immediate solution to begin transitioning the vehicle to standalone operation.
+	
+	\item \textbf{Connection Mapping:} The LM7805 was placed across the top rows of the breadboard. The battery positive terminal was wired to the regulator input pin, the common ground was tied to the center pin, and the regulated $5\text{V}$ output pin was distributed to the ESP32 \texttt{VIN} header and Pin 16 of the L293D.
+	
+	\item \textbf{Breadboard Modification and Direct ESP32 Mounting:} In the initial tethered setup, the ESP32 was connected via female-to-male jumper wires running to the breadboard. To minimize circuit volume and prevent loose, tangled, or easily broken jumper connections while the vehicle is in motion, we decided to mount the ESP32 directly onto the breadboard. However, the ESP32 development board has a wide form factor; when pressed across the central trough, it covered the tie-points on both sides, leaving no accessible pin rows for jumper wire insertion. To solve this, one of the detachable lateral power rails ($+$ and $\text{GND}$) was unclipped and removed from the breadboard. This freed up sufficient physical clearance, allowing the ESP32 to be seated firmly while leaving an entire column of breadboard tie-points exposed for clean, direct signal routing.
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.55\linewidth]{esp.jpg}
+	\caption{Direct mounting of the ESP32 onto the breadboard following the detachment of the lateral power rail}
+	\label{fig:esp_mount}
+\end{figure}
+
+\item \textbf{Voltage Verification and Final Hardware Integration:} The regulated output across the LM7805 was measured using a digital multimeter under no-load conditions, yielding a steady $5.13\text{V}$ and confirming proper voltage regulation. %[cite: 1]
+	The output was then routed to the ESP32 \texttt{VIN} pin and Pin 16 ($V_{CC1}$) of the L293D for logic bias, while the raw $8.08\text{V}$ battery rail was connected to Pin 8 ($V_{CC2}$) for the motor driver stage. %[cite: 1]
+	
+	\item \textbf{Firmware Update and Untethered Validation:} A new sketch matching the finalized breadboard pin assignments was uploaded to the ESP32. %[cite: 1]
+	The micro-USB programming cable was then detached, and standalone untethered operation was evaluated on battery power alone. %[cite: 1]
+
+\end{itemize}
+
+\subsubsection*{Challenge 4: Supply Voltage Sag and Microcontroller Brownout Mitigation}
+
+\begin{itemize}
+	\item \textbf{Observed Issue:} When running untethered on battery power, the vehicle exhibited sluggish throttle response, high-speed stalling, immediate Bluetooth disconnection in the Dabble app, and spontaneous microcontroller reboots during motor direction reversals or rapid acceleration. %[cite: 1]
+	Serial diagnostics confirmed that the ESP32's internal hardware brownout detector was being repeatedly tripped (\texttt{Brownout detector was triggered}). %[cite: 1]
+\end{itemize}
+
+\paragraph*{\textbf{Phase 4A: The Software-Only Approach (Register Masking)}}
+Before altering the hardware circuit or introducing decoupling capacitors to the breadboard, an attempt was made to resolve the resets entirely at the firmware level by suppressing the brownout detector interrupt. %[cite: 1]
+\begin{enumerate}
+	\item \textbf{Implementation:} The internal Real-Time Clock (RTC) controller register controlling brownout detection was cleared during \texttt{setup()} prior to peripheral initialization: %[cite: 1]
+\end{enumerate}
+
+\begin{lstlisting}[language=C++, caption={Suppressing Hardware Brownout Detection via RTC Register}]
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
+
+void setup() {
+  // Suppress internal hardware brownout detection
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+  
+  // Proceed with system initialization...
+}
+\end{lstlisting}
+
+\begin{itemize}
+	\item \textbf{Observed Behavior \& Failure Analysis:} While this routine successfully prevented the ESP32 from logging an explicit brownout abort message, it did not resolve physical system collapse: %[cite: 1]
+	\begin{itemize}
+		\item \textit{RF Radio Collapse:} Disabling the software detector cannot prevent physical voltage collapse. When the $5\text{V}$ rail sagged below $\approx 4.5\text{V}$, the onboard $3.3\text{V}$ Low-Dropout (LDO) regulator dropped out of regulation. %[cite: 1]
+		The $2.4\text{ GHz}$ Bluetooth radio suffered instantaneous power loss, causing Dabble to disconnect immediately whenever the motors engaged. %[cite: 1]
+		\item \textit{Processor Lockups and Core Panics:} Under heavy motor loads, the supply dropped below the minimum operating threshold of the internal flash memory and CPU core ($\approx 2.3\text{V--}2.5\text{V}$). Rather than executing a clean reboot, the processor encountered corrupted instruction fetches, silent hangs, and unhandled CPU exceptions .
+		\item \textit{Engineering Conclusion:} Suppressing the brownout detector merely silences the system alarm; it cannot compensate for a physical deficiency of charge on the power rail. %[cite: 1]
+		Hardware-level stabilization was strictly mandatory.
+	\end{itemize}
+\end{itemize}
+
+\paragraph*{\textbf{Phase 4B: Passive Buffering vs. Fundamental Linear Bottlenecks}}
+Prior to redesigning the regulator stage, the feasibility of passive buffering on the existing LM7805 circuit was evaluated: %[cite: 1]
+\begin{enumerate}
+	\item \textbf{Decoupling Limitations:} Calculations for bulk electrolytic decoupling capacitors ($100\,\mu\text{F}$ to $470\,\mu\text{F}$) across the breadboard rails indicated that while a capacitor could absorb high-frequency commutation noise (sub-millisecond spikes), it could not sustain the rail during multi-millisecond motor stall spikes ($1.0\text{A--}1.5\text{A}$). %[cite: 1]
+	The stored energy:
+	\begin{align}
+		E &= \frac{1}{2} C \left(V_{\text{nominal}}^2 - V_{\text{min}}^2\right)
+	\end{align}
+	was depleted within a fraction of a millisecond under continuous motor load. %[cite: 1]
+	
+	\item \textbf{The LM7805 Dropout Barrier ($V_{\text{drop}} \ge 2.0\text{V}$):} The primary failure point remained the LM7805's internal pass-transistor architecture. %[cite: 1]
+	Maintaining a regulated $5.0\text{V}$ output required $V_{\text{IN}} \ge 7.0\text{V}$ at all times. %[cite: 1]
+	Because motor inrush currents through the battery's internal source resistance pulled the $8.08\text{V}$ pack below $7.0\text{V}$ during turns, the LM7805 inevitably dropped out of regulation, regardless of output capacitance. %[cite: 1]
+	
+	\item \textbf{Thermal Throttling:} At an ESP32 peak RF draw of $\approx 240\text{mA}$, linear power dissipation: %[cite: 1]
+	\begin{align}
+		P_D &= (V_{\text{IN}} - V_{\text{OUT}}) \cdot I_L \approx (8.08 - 5.00) \times 0.24 \approx 0.74\text{W}
+	\end{align}
+	caused rapid thermal rise in the un-heatsinked TO-220 package, forcing internal thermal protection to choke current delivery to the logic rail. %[cite: 1]
+\end{enumerate}
+
+\paragraph*{\textbf{Phase 4C: Hardware Migration to Switching Buck Regulation}}
+The linear architecture was fully decommissioned in favor of an adjustable LM2596 DC-DC step-down switching converter operating at $150\text{ kHz}$ with $>85\%$ conversion efficiency. %[cite: 1]
+\begin{enumerate}
+	\item \textbf{Bench Potentiometer Calibration:} To prevent accidental overvoltage to the microcontroller, the LM2596 was calibrated entirely unloaded. %[cite: 1]
+	With the ESP32 and L293D removed, the $8.08\text{V}$ battery was connected across \texttt{IN+} and \texttt{IN-}. %[cite: 1]
+	A digital multimeter was attached to \texttt{OUT+} and \texttt{OUT-}, and the 25-turn precision trimming potentiometer was dialed counter-clockwise through its initial dead band until the output stabilized at exactly $5.18\text{V}$. %[cite: 1]
+	This provided clean headroom above the ESP32's onboard LDO dropout point ($4.5\text{V}$) while remaining safely below the L293D's maximum logic rating ($7.0\text{V}$). %[cite: 1]
+	
+	\item \textbf{Physical Node Separation (Dual-Rail Strategy):} To eliminate inductive back-EMF coupling into the digital lines, the power bus was physically bifurcated using independent 5-hole breadboard terminal rows: %[cite: 1]
+	\begin{itemize}
+		\item \textbf{8.08V Motor Rail (Unregulated):} Dedicated strictly to LM2596 \texttt{IN+} and L293D Pin 8 ($V_{CC2}$). %[cite: 1]
+		\item \textbf{5.18V Logic Rail (Regulated):} Sourced from LM2596 \texttt{OUT+} strictly to ESP32 \texttt{VIN} and L293D Pin 16 ($V_{CC1}$). %[cite: 1]
+		\item \textbf{Common Star-Ground:} Battery negative, LM2596 ground terminals (\texttt{IN-}, \texttt{OUT-}), ESP32 \texttt{GND}, and L293D heat sink ground pins (Pins 4, 5, 12, 13) were bonded directly to the common ground rail to guarantee uniform reference potentials. %[cite: 1]
+	\end{itemize}
+\end{enumerate}
+
+\paragraph*{\textbf{Phase 4D: Final Two-Tier Solution}}
+Stable, brownout-free operation was ultimately achieved through a combined hardware-and-software architecture: %[cite: 1]
+\begin{itemize}
+	\item \textbf{Hardware Tier:} The LM2596 buck converter buffered the logic rail against primary battery sag, maintaining an uninterrupted $5.18\text{V}$ feed to the ESP32 onboard LDO. %[cite: 1]
+	\item \textbf{Software Tier:} Retaining \texttt{WRITE\_PERI\_REG(RTC\_CNTL\_BROWN\_OUT\_REG, 0);} in firmware served as a secondary defense, preventing ultra-short sub-millisecond commutation noise from triggering false-positive CPU aborts during full-throttle direction reversals. %[cite: 1]
+\end{itemize}
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.75\linewidth]{buck-power.jpg}
+	\caption{Final two-tier power distribution architecture featuring the bench-calibrated LM2596 buck regulator}
+	\label{fig:buck_power_stage}
+\end{figure}
+
+\subsection*{\textbf{Phase 5}: Speed Calibration and D-Pad Expansion}
+\begin{itemize}
+	\item \textbf{Objective:} Implement dynamic multi-tier speed throttling, program complete directional motion vectors via the Dabble digital GamePad, and eliminate directional tracking drift caused by physical motor speed discrepancies. %[cite: 1]
+	
+	\item \textbf{Empirical Speed Calibration (Trim Multiplier):} Low-cost DC TT gear motors inherently exhibit slight mechanical and electrical tolerances in internal winding resistance, gearbox friction, and back-EMF constants. %[cite: 1]
+	During straight-line verification runs, the left motor ran noticeably faster than the right motor, causing the UGV to veer right under identical PWM duty cycles. %[cite: 1]
+	To ensure true linear trajectory tracking, an empirical calibration multiplier was integrated into the drive firmware. %[cite: 1]
+	Through systematic trial-and-error speed tests across open floor runs, a trim factor of \textbf{0.96} for the left motor was determined to produce optimal balanced velocity:
+	\begin{align}
+		\text{PWM}_{\text{Left}} &= \text{int}\left(\text{PWM}_{\text{nominal}} \times 0.96\right) \\
+		\text{PWM}_{\text{Right}} &= \text{PWM}_{\text{nominal}}
+	\end{align}
+	This software scaling factor successfully synchronized both wheel velocities, allowing the chassis to track straight across all throttle profiles. %[cite: 1]
+	
+	\item \textbf{D-Pad Motion Vector Implementation:} The digital directional pad on the Dabble GamePad was mapped to govern the full differential drive state machine: %[cite: 1]
+	\begin{itemize}
+		\item \textbf{Forward (UP):} Both H-bridges energized forward with the left channel scaled by the $0.96$ trim factor. %[cite: 1]
+		\item \textbf{Reverse (DOWN):} Both H-bridges energized in reverse with balanced trim scaling. %[cite: 1]
+		\item \textbf{Spin Left (LEFT):} Right motor driven forward and left motor driven in reverse at symmetric unscaled speeds, executing a zero-radius counter-clockwise pivot on axis. %[cite: 1]
+		\item \textbf{Spin Right (RIGHT):} Left motor driven forward and right motor driven in reverse at symmetric unscaled speeds, executing a zero-radius clockwise pivot on axis. %[cite: 1]
+		\item \textbf{Active Dynamic Braking (IDLE):} When all directional buttons are released, all directional inputs (IN1--IN4) are grounded (LOW) and PWM duty cycles are forced to zero, actively braking the motors and preventing inertia rollout. %[cite: 1]
+	\end{itemize}
+	
+	\item \textbf{Dynamic Multi-Tier Throttle Expansion:} To provide adaptable handling across varying driving environments, the firmware was expanded with four discrete speed profiles mapped to the GamePad action buttons: %[cite: 1]
+	\begin{itemize}
+		\item \textbf{Cross ($\times$):} Cruise speed (\textbf{180}/255, $\approx 70.6\%$ duty cycle) --- set as the default initialization speed. %[cite: 1]
+		\item \textbf{Square ($\square$):} Slow crawl mode (\textbf{130}/255, $\approx 51.0\%$ duty cycle) --- designed for tight, high-precision maneuvers. %[cite: 1]
+		\item \textbf{Triangle ($\triangle$):} Fast dash mode (\textbf{230}/255, $\approx 90.2\%$ duty cycle) --- optimized for rapid straight-line travel.
+		\item \textbf{Circle ($\bigcirc$):} Maximum throttle (\textbf{255}/255, $100\%$ full continuous DC rail) --- uncapped direct battery output. %[cite: 1]
+	\end{itemize}
+\end{itemize}
+
+\newpage
+
+\section{Hardware Interfacing and Pin Allocation}
+The UGV system utilizes six digital GPIOs from the ESP32: two PWM-enabled pins connected to the L293D enable lines for speed control, and four digital outputs to drive the dual H-bridge direction states. %[cite: 1]
+Table \ref{tab:ugv_pin_mapping} details the complete physical wiring layout, electrical ratings, and signal routing across all subsystems. %[cite: 1]
+
+\begin{table}[H]
+	\centering
+	\small
+	\caption{Complete System Pin Mapping and Electrical Specifications}
+	\label{tab:ugv_pin_mapping}
+	\begin{tabularx}{\linewidth}{|l|c|c|c|X|}
+		\hline
+		\textbf{Subsystem} & \textbf{ESP32 GPIO} & \textbf{L293D Pin} & \textbf{Signal Type} & \textbf{Function / Electrical Specification} \\ \hline
+		\multirow{3}{*}{\textbf{Right Motor Control}} 
+		& GPIO 33 & Pin 1 (ENA) & PWM Output & Right Motor Enable ($1\text{ kHz}$, 8-bit, 0--255) \\ \cline{2-5}
+		& GPIO 13 & Pin 2 (IN1) & Digital Out & Right Motor Direction Input 1 ($3.3\text{V}$ Logic) \\ \cline{2-5}
+		& GPIO 27 & Pin 7 (IN2) & Digital Out & Right Motor Direction Input 2 ($3.3\text{V}$ Logic) \\ \hline
+		\multirow{3}{*}{\textbf{Left Motor Control}} 
+		& GPIO 25 & Pin 9 (ENB) & PWM Output & Left Motor Enable ($1\text{ kHz}$, 8-bit, 0--255) \\ \cline{2-5}
+		& GPIO 26 & Pin 10 (IN3) & Digital Out & Left Motor Direction Input 3 ($3.3\text{V}$ Logic) \\ \cline{2-5}
+		& GPIO 32 & Pin 15 (IN4) & Digital Out & Left Motor Direction Input 4 ($3.3\text{V}$ Logic) \\ \hline
+		\multirow{2}{*}{\textbf{Motor Drive Terminals}} 
+		& --- & Pins 3, 6 & Analog Drive & Right Motor Terminals ($V_{\text{motor}} \approx 6.1\text{V}$) \\ \cline{2-5}
+		& --- & Pins 11, 14 & Analog Drive & Left Motor Terminals ($V_{\text{motor}} \approx 6.1\text{V}$) \\ \hline
+		\multirow{3}{*}{\textbf{Power Rails \& Ground}} 
+		& VIN & Pin 16 ($V_{CC1}$) & Regulated Input & Logic Bias: Regulated $5.18\text{V}$ from LM2596 \\ \cline{2-5}
+		& --- & Pin 8 ($V_{CC2}$) & Unregulated Input & Motor Output Stage: Direct $8.08\text{V}$ Battery Rail \\ \cline{2-5}
+		& GND & Pins 4, 5, 12, 13 & Ground Bus & Common Star-Ground Reference ($0\text{V}$) \\ \hline
+	\end{tabularx}
+\end{table}
+
+\newpage
+
+\section{Project Reflections and Learning Outcomes}
+
+\subsection{A Beginner's Perspective on Embedded Systems}
+Entering the domain of embedded robotics and microcontroller programming was entirely new territory for us. %[cite: 50]
+Transitioning from standard software code to hands-on embedded C++ running on the ESP32 demanded an acute understanding of how software commands directly manifest as physical electromagnetic and mechanical phenomena. %[cite: 1, 50]
+We quickly learned that microcontrollers cannot simply be treated as abstract logic processors; they operate in an imperfect analog environment governed by inductive kickbacks, switching transients, and strict input threshold requirements. %[cite: 1]
+Configuring hardware LED PWM timers and integrating asynchronous Bluetooth polling routines allowed us to realize how every clock cycle and register write directly dictates the physical behavior of the vehicle. %[cite: 1, 50]
+
+\subsection{Collaborative Troubleshooting and Conceptual Growth}
+Our troubleshooting sessions taught us that system-level bugs are an inevitable reality of embedded design. %[cite: 50]
+When the vehicle initially suffered from immediate Bluetooth disconnections and brownout reboots under load, our initial instinct was to search for a quick software workaround by masking internal RTC registers. %[cite: 1]
+Encountering processor core freezes and RF transmitter collapse demonstrated a critical engineering principle: software instructions cannot compensate for a physical deficiency of charge on a power line. %[cite: 1]
+We had to step back, calculate thermal dissipation limits, analyze dropout voltage barriers, and restructure the physical power architecture using an LM2596 switching regulator. %[cite: 1]
+Documenting each stage in \LaTeX\ reinforced this systematic approach, enabling us to trace hardware faults, verify signal integrity, and present our technical findings rigorously. %[cite: 50]
+
+\subsection{Hardware Frustrations and Physical Challenges}
+Despite the satisfaction of seeing our code function, the physical assembly repeatedly challenged our patience. %[cite: 50]
+First and foremost was the physical breadboard layout. %[cite: 50]
+The ESP32 development board is wide enough to bridge an entire central trough, initially blocking access to surrounding tie-points and complicating signal routing.
+Physically modifying the breadboard by unclipping a lateral rail gave us the necessary clearance to seat the microcontroller firmly, eliminating loose, dangling jumper connections.
+Furthermore, real-world mechanical tolerances proved to be a persistent hurdle. %[cite: 50]
+Even though both DC TT gear motors received identical PWM duty cycles, physical variations in internal gearbox friction and winding resistance forced the robot off a straight trajectory. %[cite: 1]
+Calibrating an empirical trim factor of $0.96$ through repetitive floor trials emphasized that embedded robotics demands continuous software compensation for imperfect mechanical hardware. %[cite: 1, 50]
+
+\subsection{Final Thoughts and Viva Preparation}
+Looking back as we prepare for our project viva, it is immensely rewarding to see how a collection of raw components evolved into a fully functional, untethered ground vehicle. %[cite: 50]
+What began as basic circuit diagrams and separate software routines grew into an integrated system combining hardware PWM regulation, dual-rail power isolation, Bluetooth teleoperation, and dynamic throttle control. %[cite: 1, 50]
+We have developed a deep, practical understanding of H-bridge switching, buck regulation efficiency, and communication pipelines. %[cite: 1, 50]
+All the frustration spent tracing brownouts, trimming potentiometers, and uncoupling breadboard rails dissipated the moment the chassis smoothly navigated the floor under complete wireless control. %[cite: 1, 50]
+
+\newpage
+
+\section{Teamwork and Acknowledgements}
+
+\subsection*{Reflections on Teamwork}
+The successful implementation of this Unmanned Ground Vehicle was the direct outcome of focused teamwork, shared responsibility, and constant technical communication. %[cite: 50]
+Bridging physical mechanical assembly, breadboard electronics, and low-level firmware required a clear division of tasks. %[cite: 50]
+Our workflow was distributed to capitalize on individual strengths, covering everything from bench voltage calibration and power rail isolation to writing the Dabble Bluetooth interface routines and tuning motor PWM registers. %[cite: 1, 50]
+When encountering complex system failures---such as brownout resets during motor commutation or trajectory drift during floor trials---we held collective brainstorming sessions to test hypotheses methodically. %[cite: 1, 50]
+This collaborative dynamic significantly shortened debugging cycles and deepened our joint understanding of embedded systems design. %[cite: 50]
+
+\subsection*{Acknowledgements}
+As a two-person team, we wish to express our sincere gratitude to everyone who contributed to the realization of this project: %[cite: 50]
+\begin{itemize}
+	\item \textbf{Project Advisors \& Instructors:} For outlining the clear engineering objectives of the UGV Part 1 assignment, providing foundational technical guidance, and encouraging independent circuit problem-solving. %[cite: 50]
+	\item \textbf{Lab Staff \& Teaching Assistants:} For facilitating access to the electrical laboratory facilities, diagnostic tools, digital multimeters, and chassis hardware kits. %[cite: 50]
+	\item \textbf{Artificial Intelligence Tools:} For serving as an efficient thought partner and documentation accelerator, assisting in rapid syntax verification, register exploration, and \LaTeX\ document structuring. %[cite: 50]
+	\item \textbf{Peers \& Classmates:} For sharing valuable feedback during untethered floor driving sessions and assisting in real-time velocity observations during speed trim calibration. %[cite: 1, 50]
+\end{itemize}
+
+\end{document}

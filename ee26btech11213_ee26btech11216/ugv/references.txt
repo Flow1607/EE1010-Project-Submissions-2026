@@ -1,0 +1,43 @@
+Unmanned Ground Vehicle (UGV) - References used
+
+
+* Voice-Controlled UGV Repository (https://github.com/gadepall/voice-ugv)
+	- Understanding mechanical assembly and hardware construction of the 2-wheel differential drive chassis kit
+	- Reference interfacing between L293D quadruple half-H driver and DC TT gear motors
+	- Basic chassis layout, motor mounting orientation, and caster wheel alignment
+
+
+* Dabble Mobile App & DabbleESP32 Library Documentation (STEMpedia)
+	- Dabble mobile application GamePad module operating in Digital Mode
+	- Establishing Bluetooth Classic RF communication on ESP32 using the <DabbleESP32.h> library
+	- Asynchronous, non-blocking controller polling via Dabble.processInput() inside the main execution loop
+
+
+* Component Datasheets & Technical Manuals
+	- ESP32-WROOM-32 Technical Reference Manual (Hardware LED PWM controller ledc, dual-core architecture, and RTC brownout control registers)
+	- L293D Quadruple Half-H Driver IC Datasheet (Logic supply VCC1 vs motor supply VCC2 ratings, input threshold voltage VIH = 2.3V, peak and continuous current limits)
+	- LM2596 Step-Down Switching Regulator Module Datasheet (150 kHz switching buck converter operation, power dissipation calculations, and precision potentiometer calibration)
+
+
+* LLMs, mainly Gemini
+	- Circuit architecture planning and decoupled dual-rail power distribution (8.08V motor rail vs 5.18V regulated logic rail)
+	- Diagnosing and analyzing the LM7805 dropout voltage barrier (Vdrop >= 2.0V) and thermal dissipation bottlenecks
+	- Evaluating software-only brownout register suppression (WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0)) and analyzing underlying voltage collapse
+	- Calculating capacitor energy storage limits and determining the need for switching buck regulation over passive decoupling
+	- Developing standalone, production-ready C++ firmware for hardware PWM speed control and Dabble GamePad teleoperation
+	- Formulating empirical speed calibration equations and determining the 0.96 left motor trim multiplier to correct trajectory drift
+	- Troubleshooting compiler errors, function scoping bugs, and GPIO/PWM pin mapping mismatches
+	- Structuring, formatting, and refining the engineering progress log in LaTeX, including table layout fixes (tabularx) and document flow
+
+
+* Surfing on the Web (Googling)
+	- Syntax differences across ESP32 Arduino Core versions (Core 2.x ledcSetup/ledcAttachPin vs Core 3.x ledcAttach/ledcWrite)
+	- Bluetooth Classic pairing procedures and troubleshooting disconnection issues with Dabble on Android
+	- Breadboard clearance solutions for wide ESP32 development modules (detaching lateral power rails)
+	- Empirical velocity matching and differential drive kinematics for two-wheeled robots
+
+* Assistance from the TAs
+	- Assignment briefing and project requirements for UGV Part 1
+	- Provisioning hardware kits (ESP32 Dev Module, L293D IC, chassis, TT motors, LM2596 module, and battery pack)
+	- Guidance on motor wire soldering repair and multimeter bench testing
+	- Queries regarding project scope, evaluation benchmarks, and viva expectations
